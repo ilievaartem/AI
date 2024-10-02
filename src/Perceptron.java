@@ -1,64 +1,91 @@
 import java.util.Random;
 
 public class Perceptron {
+    private double[][] weights;
+    private double[] bias;
+    private double learningSpeed;
 
-    static final int NUM_INPUTS = 12;
-    double[] weights = new double[NUM_INPUTS];
-    double bias;
-    double learningRate = 0.1;
+    private int inputSize;
+    private int outputSize;
+    private Random random;
 
-    Random random = new Random();
+    public Perceptron(int inputSize, int outputSize, double learningSpeed) {
+        this.inputSize = inputSize;
+        this.outputSize = outputSize;
+        this.learningSpeed = learningSpeed;
+        this.random = new Random();
 
-    public Perceptron() {
-        for (int i = 0; i < NUM_INPUTS; i++) {
-            weights[i] = random.nextDouble() - 0.5;
+        weights = new double[outputSize][inputSize];
+        bias = new double[outputSize];
+        for (int i = 0; i < outputSize; i++) {
+            for (int j = 0; j < inputSize; j++) {
+                weights[i][j] = random.nextDouble() - 0.5;
+            }
+            bias[i] = random.nextDouble() - 0.5;
         }
-        bias = random.nextDouble() - 0.5;
     }
 
-    public double weightedSum(int[] inputs) {
-        double sum = 0;
-        for (int i = 0; i < NUM_INPUTS; i++) {
-            sum += weights[i] * inputs[i];
-        }
-        sum += bias;
-        return sum;
-    }
-
-    public int predict(int[] inputs) {
-        double sum = weightedSum(inputs);
+    private int activation(double sum) {
         return sum >= 0 ? 1 : 0;
     }
 
-    public void train(int[] inputs, int expectedOutput) {
-        int output = predict(inputs);
-        int error = expectedOutput - output;
-
-        if (error != 0) {
-            for (int i = 0; i < NUM_INPUTS; i++) {
-                weights[i] += learningRate * error * inputs[i];
+    public int[] predict(int[] inputs) {
+        int[] outputs = new int[outputSize];
+        for (int i = 0; i < outputSize; i++) {
+            double sum = bias[i];
+            for (int j = 0; j < inputSize; j++) {
+                sum += weights[i][j] * inputs[j];
             }
-            bias += learningRate * error * 1;
+            outputs[i] = activation(sum);
+        }
+        return outputs;
+    }
+
+    public void trainNeuron(int[][] inputsList, int neuronIndex, int[] desiredOutput) {
+        System.out.println("Тренуємо нейрон для літери: " + (neuronIndex + 1));
+        System.out.println("Поточні ваги перед оновленням:");
+        printWeights(neuronIndex);
+
+        for (int epoch = 0; epoch < 1000; epoch++) {
+            int totalError = 0;
+
+            for (int i = 0; i < inputsList.length; i++) {
+                int[] inputs = inputsList[i];
+                int desired = desiredOutput[i];
+
+                double weightedSum = bias[neuronIndex];
+                for (int j = 0; j < inputs.length; j++) {
+                    weightedSum += weights[neuronIndex][j] * inputs[j];
+                }
+
+                int output = activation(weightedSum);
+                int error = desired - output;
+                totalError += Math.abs(error);
+
+                for (int j = 0; j < inputs.length; j++) {
+                    weights[neuronIndex][j] += learningSpeed * error * inputs[j];
+                }
+                bias[neuronIndex] += learningSpeed * error;
+            }
+
+            if (totalError == 0) {
+                System.out.println("Нейрон для літери " + (neuronIndex + 1) + " навчився за " + (epoch + 1) + " епох.");
+                printWeights(neuronIndex);
+                System.out.println("-----------------------------------------------");
+                break;
+            }
+
+            if ((epoch + 1) % 100 == 0) {
+                System.out.println("Епоха: " + (epoch + 1) + " -> Помилка: " + totalError);
+            }
         }
     }
 
-    public int[] flattenMatrix(int[][] matrix) {
-        int[] inputVector = new int[NUM_INPUTS];
-        int index = 0;
-        for (int i = 0; i < matrix.length; i++) {
-            for (int j = 0; j < matrix[i].length; j++) {
-                inputVector[index++] = matrix[i][j];
-            }
+    private void printWeights(int neuronIndex) {
+        System.out.print("Ваги: ");
+        for (int j = 0; j < weights[neuronIndex].length; j++) {
+            System.out.printf("%.4f ", weights[neuronIndex][j]);
         }
-        return inputVector;
-    }
-
-    public double[] getWeights() {
-        double[] allWeights = new double[NUM_INPUTS + 1];
-        for (int i = 0; i < NUM_INPUTS; i++) {
-            allWeights[i] = weights[i];
-        }
-        allWeights[NUM_INPUTS] = bias;
-        return allWeights;
+        System.out.printf("bias: %.4f\n", bias[neuronIndex]);
     }
 }
