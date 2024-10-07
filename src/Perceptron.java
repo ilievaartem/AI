@@ -25,12 +25,20 @@ public class Perceptron {
         }
     }
 
-    private int activation(double sum) {
-        return sum >= 0 ? 1 : 0;
+    private double sigmoid(double sum) {
+        return 1.0 / (1.0 + Math.exp(-sum));
     }
 
-    public int[] predict(int[] inputs) {
-        int[] outputs = new int[outputSize];
+    private double sigmoidDerivative(double output) {
+        return output * (1.0 - output);
+    }
+
+    private double activation(double sum) {
+        return sigmoid(sum);
+    }
+
+    public double[] predict(int[] inputs) {
+        double[] outputs = new double[outputSize];
         for (int i = 0; i < outputSize; i++) {
             double sum = bias[i];
             for (int j = 0; j < inputSize; j++) {
@@ -41,43 +49,47 @@ public class Perceptron {
         return outputs;
     }
 
-    public void trainNeuron(int[][] inputsList, int neuronIndex, int[] desiredOutput) {
-        System.out.println("Тренуємо нейрон для літери: " + (neuronIndex + 1));
-        System.out.println("Поточні ваги перед оновленням:");
-        printWeights(neuronIndex);
-
-        for (int epoch = 0; epoch < 1000; epoch++) {
-            int totalError = 0;
+    public void train(int[][] inputsList, int[][] desiredOutputs, int maxEpochs, double errorThreshold) {
+        for (int epoch = 1; epoch <= maxEpochs; epoch++) {
+            double totalError = 0.0;
 
             for (int i = 0; i < inputsList.length; i++) {
                 int[] inputs = inputsList[i];
-                int desired = desiredOutput[i];
+                int[] desired = desiredOutputs[i];
 
-                double weightedSum = bias[neuronIndex];
-                for (int j = 0; j < inputs.length; j++) {
-                    weightedSum += weights[neuronIndex][j] * inputs[j];
+                for (int neuron = 0; neuron < outputSize; neuron++) {
+                    double weightedSum = bias[neuron];
+                    for (int j = 0; j < inputSize; j++) {
+                        weightedSum += weights[neuron][j] * inputs[j];
+                    }
+
+                    double output = activation(weightedSum);
+
+                    double error = desired[neuron] - output;
+                    totalError += error * error; // Квадратична помилка
+
+                    double gradient = error * sigmoidDerivative(output);
+
+                    for (int j = 0; j < inputSize; j++) {
+                        weights[neuron][j] += learningSpeed * gradient * inputs[j];
+                    }
+                    bias[neuron] += learningSpeed * gradient;
                 }
-
-                int output = activation(weightedSum);
-                int error = desired - output;
-                totalError += Math.abs(error);
-
-                for (int j = 0; j < inputs.length; j++) {
-                    weights[neuronIndex][j] += learningSpeed * error * inputs[j];
-                }
-                bias[neuronIndex] += learningSpeed * error;
             }
 
-            if (totalError == 0) {
-                System.out.println("Нейрон для літери " + (neuronIndex + 1) + " навчився за " + (epoch + 1) + " епох.");
-                printWeights(neuronIndex);
-                System.out.println("-----------------------------------------------");
+            if (epoch % 100 == 0 || epoch == 1 || epoch == maxEpochs) {
+                System.out.printf("Епоха: %d -> Квадратична помилка: %.4f\n", epoch, totalError);
+            }
+
+            if (totalError < errorThreshold) {
+                System.out.printf("Навчання зупинено на епосі %d, загальна квадратична помилка: %.4f\n", epoch, totalError);
                 break;
             }
+        }
 
-            if ((epoch + 1) % 100 == 0) {
-                System.out.println("Епоха: " + (epoch + 1) + " -> Помилка: " + totalError);
-            }
+        for (int neuron = 0; neuron < outputSize; neuron++) {
+            printWeights(neuron);
+            System.out.println("-----------------------------------------------");
         }
     }
 

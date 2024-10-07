@@ -4,6 +4,8 @@ public class Main {
         final int MATRIX_SIZE = 5;
         final int INPUT_SIZE = MATRIX_SIZE * MATRIX_SIZE;
         final double LEARNING_RATE = 0.1;
+        final int MAX_EPOCHS = 10000;
+        final double ERROR_THRESHOLD = 0.01;
 
         int[][] inputsList = {
                 // А
@@ -192,11 +194,11 @@ public class Main {
                 },
                 // У
                 {
-                        1, 0, 1, 0, 1,           
-                        1, 0, 1, 0, 1,           
-                        1, 0, 0, 0, 1,           
-                        1, 1, 1, 0, 1,           
-                        1, 0, 0, 0, 1            
+                        1, 0, 1, 0, 1,
+                        1, 0, 1, 0, 1,
+                        1, 0, 0, 0, 1,
+                        1, 1, 1, 0, 1,
+                        1, 0, 0, 0, 1
                 },
                 // Ф
                 {
@@ -204,7 +206,7 @@ public class Main {
                         1, 0, 1, 0, 1,
                         1, 1, 1, 1, 1,
                         0, 0, 1, 0, 0,
-                        0, 0, 1, 0, 0,
+                        0, 0, 1, 0, 0
                 },
                 // Х
                 {
@@ -224,11 +226,11 @@ public class Main {
                 },
                 // Ч
                 {
-                        1, 0, 1, 0, 1,              
-                        1, 0, 1, 0, 1,              
-                        1, 1, 0, 0, 1,              
-                        1, 1, 1, 0, 1,              
-                        1, 1, 1, 0, 1               
+                        1, 0, 1, 0, 1,
+                        1, 0, 1, 0, 1,
+                        1, 1, 0, 0, 1,
+                        1, 1, 1, 0, 1,
+                        1, 1, 1, 0, 1
                 },
                 // Ш
                 {
@@ -264,11 +266,11 @@ public class Main {
                 },
                 // Я
                 {
-                        1, 1, 1, 1, 1,
-                        1, 0, 1, 0, 1,
-                        1, 1, 0, 1, 1,
-                        1, 1, 1, 1, 1,
-                        1, 1, 1, 1, 1
+                        0, 1, 1, 1, 0,
+                        0, 1, 0, 1, 0,
+                        0, 1, 0, 1, 0,
+                        1, 1, 1, 1, 0,
+                        1, 1, 0, 1, 0
                 }
         };
 
@@ -284,9 +286,7 @@ public class Main {
 
         Perceptron perceptron = new Perceptron(INPUT_SIZE, NUM_LETTERS, LEARNING_RATE);
 
-        for (int i = 0; i < NUM_LETTERS; i++) {
-            perceptron.trainNeuron(inputsList, i, desiredOutputs[i]);
-        }
+        perceptron.train(inputsList, desiredOutputs, MAX_EPOCHS, ERROR_THRESHOLD);
 
         System.out.println("Тестування:");
         String[] letters = {
@@ -297,14 +297,17 @@ public class Main {
         };
 
         for (int i = 0; i < inputsList.length; i++) {
-            int[] prediction = perceptron.predict(inputsList[i]);
+            double[] prediction = perceptron.predict(inputsList[i]);
             int predictedLetterIndex = -1;
+            double maxOutput = -Double.MAX_VALUE;
+
             for (int j = 0; j < prediction.length; j++) {
-                if (prediction[j] == 1) {
+                if (prediction[j] > maxOutput) {
+                    maxOutput = prediction[j];
                     predictedLetterIndex = j;
-                    break;
                 }
             }
+
             if (predictedLetterIndex != -1) {
                 System.out.println("Буква: " + letters[i] + " -> Виявлена буква: " + letters[predictedLetterIndex] + " (Очікувана: " + letters[i] + ")");
             } else {
