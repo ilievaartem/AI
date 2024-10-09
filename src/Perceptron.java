@@ -66,7 +66,7 @@ public class Perceptron {
                     double output = activation(weightedSum);
 
                     double error = desired[neuron] - output;
-                    totalError += error * error; // Квадратична помилка
+                    totalError += error * error;
 
                     double gradient = error * sigmoidDerivative(output);
 
