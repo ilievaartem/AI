@@ -49,9 +49,24 @@ public class Perceptron {
         return outputs;
     }
 
-    public void train(int[][] inputsList, int[][] desiredOutputs, int maxEpochs, double errorThreshold) {
+    public boolean isPredictionCorrect(double[] outputs, int correctIndex, double threshold) {
+        double correctOutput = outputs[correctIndex];
+        if (correctOutput < threshold) {
+            return false;
+        }
+
+        for (int i = 0; i < outputs.length; i++) {
+            if (i != correctIndex && outputs[i] > (1.0 - threshold)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public void train(int[][] inputsList, int[][] desiredOutputs, int maxEpochs, double errorThreshold, double accuracyThreshold) {
         for (int epoch = 1; epoch <= maxEpochs; epoch++) {
             double totalError = 0.0;
+            int correctPredictions = 0;
 
             for (int i = 0; i < inputsList.length; i++) {
                 int[] inputs = inputsList[i];
@@ -64,7 +79,6 @@ public class Perceptron {
                     }
 
                     double output = activation(weightedSum);
-
                     double error = desired[neuron] - output;
                     totalError += error * error;
 
@@ -75,10 +89,18 @@ public class Perceptron {
                     }
                     bias[neuron] += learningSpeed * gradient;
                 }
+
+                double[] outputs = predict(inputs);
+                int correctIndex = findCorrectIndex(desired);
+                if (isPredictionCorrect(outputs, correctIndex, accuracyThreshold)) {
+                    correctPredictions++;
+                }
             }
 
+            double accuracy = correctPredictions / (double) inputsList.length;
+
             if (epoch % 100 == 0 || epoch == 1 || epoch == maxEpochs) {
-                System.out.printf("Епоха: %d -> Квадратична помилка: %.4f\n", epoch, totalError);
+                System.out.printf("Епоха: %d -> Квадратична помилка: %.4f, Точність: %.2f%%\n", epoch, totalError, accuracy * 100);
             }
 
             if (totalError < errorThreshold) {
@@ -86,11 +108,15 @@ public class Perceptron {
                 break;
             }
         }
+    }
 
-        for (int neuron = 0; neuron < outputSize; neuron++) {
-            printWeights(neuron);
-            System.out.println("-----------------------------------------------");
+    private int findCorrectIndex(int[] desiredOutputs) {
+        for (int i = 0; i < desiredOutputs.length; i++) {
+            if (desiredOutputs[i] == 1) {
+                return i;
+            }
         }
+        return -1;
     }
 
     private void printWeights(int neuronIndex) {

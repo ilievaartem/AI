@@ -4,8 +4,9 @@ public class Main {
         final int MATRIX_SIZE = 7;
         final int INPUT_SIZE = MATRIX_SIZE * MATRIX_SIZE;
         final double LEARNING_RATE = 0.1;
-        final int MAX_EPOCHS = 1000;
+        final int MAX_EPOCHS = 10000;
         final double ERROR_THRESHOLD = 0.01;
+        final double ACCURACY_THRESHOLD = 0.9;
 
         int[][] inputsList = {
                 // А
@@ -152,7 +153,7 @@ public class Main {
                 {
                         1,0,0,0,0,1,1,
                         1,0,0,1,1,1,0,
-                        1,1,1,1,0,0,0,
+                        1,0,1,1,0,0,0,
                         1,1,1,0,0,0,0,
                         1,0,1,0,1,0,0,
                         1,0,0,1,1,0,0,
@@ -306,7 +307,7 @@ public class Main {
                         1,0,1,1,1,0,1,
                         1,0,1,1,1,0,1,
                         1,1,1,1,1,1,1,
-                        0,0,0,0,0,0,1
+                        0,0,0,0,1,1,1
                 },
                 // Ь
                 {
@@ -325,7 +326,7 @@ public class Main {
                         1,1,1,1,0,0,1,
                         1,1,1,1,0,0,1,
                         1,1,1,1,0,0,1,
-                        1,0,0,1,1,1,1,
+                        1,0,0,1,0,0,1,
                         1,0,0,1,1,1,1
                 },
                 // Я
@@ -352,7 +353,7 @@ public class Main {
 
         Perceptron perceptron = new Perceptron(INPUT_SIZE, NUM_LETTERS, LEARNING_RATE);
 
-        perceptron.train(inputsList, desiredOutputs, MAX_EPOCHS, ERROR_THRESHOLD);
+        perceptron.train(inputsList, desiredOutputs, MAX_EPOCHS, ERROR_THRESHOLD, ACCURACY_THRESHOLD);
 
         System.out.println("Тестування:");
         String[] letters = {
@@ -375,10 +376,18 @@ public class Main {
             }
 
             if (predictedLetterIndex != -1) {
-                System.out.println("Буква: " + letters[i] + " -> Виявлена буква: " + letters[predictedLetterIndex] + " (Очікувана: " + letters[i] + ")");
+                System.out.printf("Буква: %s -> Виявлена буква: %s (Очікувана: %s)\n",
+                        letters[i], letters[predictedLetterIndex], letters[i]);
             } else {
-                System.out.println("Буква: " + letters[i] + " -> Виявлена буква: Невідома (Очікувана: " + letters[i] + ")");
+                    System.out.printf("Буква: %s -> Виявлена буква: Невідома (Очікувана: %s)\n",
+                                      letters[i], letters[i]);
             }
+
+            System.out.println("Вихідні сигнали нейронів (%): ");
+            for (double output : prediction) {
+                System.out.printf("%.2f%% ", output * 100);
+            }
+            System.out.println("\n-----------------------------------------------");
         }
     }
 }
